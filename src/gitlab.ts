@@ -4,7 +4,7 @@ import { cyan, green } from 'kolorist'
 import { notNullish } from '@antfu/utils'
 import type { AuthorInfo, ChangelogOptions, Commit } from './types'
 
-export async function sendReleaseOnGithub(
+export async function sendReleaseOnGitlab(
   options: ChangelogOptions,
   content: string,
 ) {
@@ -45,46 +45,34 @@ export async function sendReleaseOnGithub(
 
 function getHeaders(options: ChangelogOptions) {
   return {
-    accept: 'application/vnd.github.v3+json',
-    authorization: `token ${options.token}`,
+    'PRIVATE-TOKEN': `${options.token}`,
   }
 }
 
-export async function resolveAuthorInfoOnGithub(options: ChangelogOptions, info: AuthorInfo) {
+export async function resolveAuthorInfoOnGitlab(options: ChangelogOptions, info: AuthorInfo) {
   if (info.login)
     return info
 
-  // token not provided, skip github resolving
+  // token not provided, skip gitlab resolving
   if (!options.token)
     return info
 
   try {
-    const data = await $fetch(`${options.baseUrlApi}/search/users?q=${encodeURIComponent(info.email)}`, {
+    const data = await $fetch(`${options.baseUrlApi}/v4/users?search=${encodeURIComponent(info.email)}`, {
       headers: getHeaders(options),
     })
-    info.login = data.items[0].login
-    info.avatarUrl = data.items[0].avatar_url
+    info.login = data[0].username
+    info.avatarUrl = data[0].avatar_url
   }
   catch {}
 
   if (info.login)
     return info
 
-  if (info.commits.length) {
-    try {
-      const data = await $fetch(`${options.baseUrlApi}/repos/${options.repo}/commits/${info.commits[0]}`, {
-        headers: getHeaders(options),
-      })
-      info.login = data.author.login
-      info.avatarUrl = data.author.avatar_url
-    }
-    catch (e) {}
-  }
-
   return info
 }
 
-export async function resolveAuthorsOnGithub(commits: Commit[], options: ChangelogOptions) {
+export async function resolveAuthorsOnGitlab(commits: Commit[], options: ChangelogOptions) {
   const map = new Map<string, AuthorInfo>()
   commits.forEach((commit) => {
     commit.resolvedAuthors = commit.authors.map((a, idx) => {
@@ -107,8 +95,8 @@ export async function resolveAuthorsOnGithub(commits: Commit[], options: Changel
     }).filter(notNullish)
   })
   const authors = Array.from(map.values())
-  const resolved = await Promise.all(authors.map(info => resolveAuthorInfoOnGithub(options, info)))
-
+  const resolved = await Promise.all(authors.map(info => resolveAuthorInfoOnGitlab(options, info)))
+  console.log(resolved, 'resolved')
   const loginSet = new Set<string>()
   const nameSet = new Set<string>()
   return resolved
@@ -128,9 +116,9 @@ export async function resolveAuthorsOnGithub(commits: Commit[], options: Changel
     })
 }
 
-export async function hasTagOnGitHub(tag: string, options: ChangelogOptions) {
+export async function hasTagOnGitlab(tag: string, options: ChangelogOptions) {
   try {
-    await $fetch(`${options.baseUrl}/repos/${options.repo}/git/ref/tags/${tag}`, {
+    await $fetch(`${options.baseUrlApi}/repos/${options.repo}/git/ref/tags/${tag}`, {
       headers: getHeaders(options),
     })
     return true

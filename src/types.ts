@@ -1,4 +1,4 @@
-import type { ChangelogConfig, GitCommit } from 'changelogen'
+import type { ChangelogConfig, GitCommit, RepoConfig } from 'changelogen'
 
 export type ChangelogenOptions = ChangelogConfig
 
@@ -64,14 +64,20 @@ export interface ChangelogOptions extends Partial<ChangelogenOptions> {
    * @default true
    */
   emoji?: boolean
+
+  repo?: RepoConfig
+
+  gitlab?: boolean
+  github?: boolean
+
+  provider?: 'github' | 'gitlab'
+
   /**
-   * Github base url
-   * @default github.com
+   * base url
    */
   baseUrl?: string
   /**
-   * Github base API url
-   * @default api.github.com
+   * base API url
    */
   baseUrlApi?: string
 }
@@ -83,4 +89,5 @@ export interface AuthorInfo {
   login?: string
   email: string
   name: string
+  avatarUrl?: string
 }

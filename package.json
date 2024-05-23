@@ -1,9 +1,9 @@
 {
-  "name": "changelogithub",
+  "name": "changelog",
   "type": "module",
-  "version": "0.13.7",
+  "version": "0.0.0",
   "packageManager": "pnpm@9.0.2",
-  "description": "Generate changelog for GitHub.",
+  "description": "Generate changelog.",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
   "funding": "https://github.com/sponsors/antfu",

@@ -1,5 +1,9 @@
 import semver from 'semver'
 
+export async function getGitRepo() {
+  return await execCommand('git', ['config', '--get', 'remote.origin.url'])
+}
+
 export async function getGitHubRepo(baseUrl: string) {
   const url = await execCommand('git', ['config', '--get', 'remote.origin.url'])
   const escapedBaseUrl = baseUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

@@ -5,7 +5,7 @@ import type { Commit, ResolvedChangelogOptions } from './types'
 
 const emojisRE = /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g
 
-function formatReferences(references: Reference[], baseUrl: string, github: string, type: 'issues' | 'hash'): string {
+function formatReferences(references: Reference[], baseUrl: string, repo: string, type: 'issues' | 'hash'): string {
   const refs = references
     .filter((i) => {
       if (type === 'issues')
@@ -13,11 +13,11 @@ function formatReferences(references: Reference[], baseUrl: string, github: stri
       return i.type === 'hash'
     })
     .map((ref) => {
-      if (!github)
+      if (!repo)
         return ref.value
       if (ref.type === 'pull-request' || ref.type === 'issue')
-        return `https://${baseUrl}/${github}/issues/${ref.value.slice(1)}`
-      return `[<samp>(${ref.value.slice(0, 5)})</samp>](https://${baseUrl}/${github}/commit/${ref.value})`
+        return `${baseUrl}/${repo}/issues/${ref.value.slice(1)}`
+      return `[<samp>(${ref.value.slice(0, 5)})</samp>](${baseUrl}/${repo}/commit/${ref.value})`
     })
 
   const referencesString = join(refs).trim()
@@ -28,8 +28,8 @@ function formatReferences(references: Reference[], baseUrl: string, github: stri
 }
 
 function formatLine(commit: Commit, options: ResolvedChangelogOptions) {
-  const prRefs = formatReferences(commit.references, options.baseUrl, options.repo as string, 'issues')
-  const hashRefs = formatReferences(commit.references, options.baseUrl, options.repo as string, 'hash')
+  const prRefs = formatReferences(commit.references, options.baseUrl, options.repo.repo!, 'issues')
+  const hashRefs = formatReferences(commit.references, options.baseUrl, options.repo.repo!, 'hash')
 
   let authors = join([...new Set(commit.resolvedAuthors?.map(i => i.login ? `@${i.login}` : `**${i.name}**`))])?.trim()
   if (authors)
@@ -81,9 +81,10 @@ function formatSection(commits: Commit[], sectionName: string, options: Resolved
       prefix = `${scopeText}: `
     }
 
-    lines.push(...scopes[scope]
-      .reverse()
-      .map(commit => `${padding}- ${prefix}${formatLine(commit, options)}`),
+    lines.push(
+      ...scopes[scope]
+        .reverse()
+        .map(commit => `${padding}- ${prefix}${formatLine(commit, options)}`),
     )
   })
 
@@ -111,9 +112,30 @@ export function generateMarkdown(commits: Commit[], options: ResolvedChangelogOp
   if (!lines.length)
     lines.push('*No significant changes*')
 
-  const url = `https://${options.baseUrl}/${options.repo}/compare/${options.from}...${options.to}`
+  const url = `${options.baseUrl}/${options.repo.repo}/compare/${options.from}...${options.to}`
+  switch (options.provider) {
+    case 'github':
+      lines.push('', `##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](${url})`)
+      break
+    case 'gitlab': {
+      lines.push('', `##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on Gitlab](${url})`)
 
-  lines.push('', `##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](${url})`)
+      lines.push('', '### &nbsp;&nbsp;&nbsp;&nbsp;Contributors')
+
+      const allAuthors = commits.map(v => v.resolvedAuthors || []).flat()
+
+      const authors = groupBy(allAuthors, 'login')
+      const sortedAuthors = Object.values(authors).sort((a, b) => b.length - a.length)
+      let avatarLine = ''
+      sortedAuthors.forEach(([author]) => {
+        const name = author.login || author.name
+        avatarLine += `<img alt="${name}" src="${author.avatarUrl}" width="50" height="50"/> `
+      })
+      lines.push(avatarLine)
+    }
+
+      break
+  }
 
   return convert(lines.join('\n').trim(), true)
 }

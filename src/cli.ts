@@ -5,16 +5,19 @@ import process from 'node:process'
 import { blue, bold, cyan, dim, red, yellow } from 'kolorist'
 import cac from 'cac'
 import { version } from '../package.json'
-import { generate, hasTagOnGitHub, isRepoShallow, sendRelease } from './index'
+import { generate, hasTagOnGitHub, isRepoShallow, sendReleaseOnGithub } from './index'
 
 const cli = cac('changelogithub')
 
 cli
   .version(version)
-  .option('-t, --token <path>', 'GitHub Token')
+  .option('-t, --token <path>', 'GitHub/Gitlab Token')
+  .option('--base-url <url>', 'Base URL')
+  .option('--base-url-api <url>', 'Base URL API')
+  .option('--gitlab', 'is GitLab')
+  .option('--github', 'is Github')
   .option('--from <ref>', 'From tag')
   .option('--to <ref>', 'To tag')
-  .option('--github <path>', 'GitHub Repository, e.g. antfu/changelogithub')
   .option('--name <name>', 'Name of the release')
   .option('--contributors', 'Show contributors section')
   .option('--prerelease', 'Mark release as prerelease')
@@ -29,8 +32,6 @@ cli
 cli
   .command('')
   .action(async (args) => {
-    args.token = args.token || process.env.GITHUB_TOKEN
-
     let webUrl = ''
 
     try {
@@ -87,7 +88,7 @@ cli
         return
       }
 
-      await sendRelease(config, md)
+      await sendReleaseOnGithub(config, md)
     }
     catch (e: any) {
       console.error(red(String(e)))
