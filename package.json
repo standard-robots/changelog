@@ -1,20 +1,20 @@
 {
-  "name": "changelog",
+  "name": "std-changelog",
   "type": "module",
   "version": "0.0.0",
   "packageManager": "pnpm@9.0.2",
   "description": "Generate changelog.",
-  "author": "Anthony Fu <anthonyfu117@hotmail.com>",
+  "author": "standard-robots",
   "license": "MIT",
-  "funding": "https://github.com/sponsors/antfu",
-  "homepage": "https://github.com/antfu/changelogithub#readme",
+  "homepage": "https://github.com/standard-robots/changelog#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/antfu/changelogithub.git"
+    "url": "git+https://github.com/standard-robots/changelog.git"
   },
-  "bugs": "https://github.com/antfu/changelogithub/issues",
+  "bugs": "https://github.com/standard-robots/changelog/issues",
   "keywords": [
     "github",
+    "gitlab",
     "release",
     "releases",
     "conventional",
